@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Rekomendasi Untuk Anda{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h3>Rekomendasi Film untuk {{ nama }}</h3>
+    <p class="text-muted">10 film teratas berdasarkan selera Anda</p>
+</div>
+
+<div class="row g-3">
+    {% for rec in recommendations %}
+    <div class="col-md-6">
+        <div class="card film-card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-secondary me-1">#{{ loop.index }}</span>
+                        <h6 class="d-inline">
+                            <a href="{{ url_for('film_detail', tmdb_id=rec.tmdbId) }}"
+                               class="text-decoration-none text-reset">{{ rec.title }}</a>
+                        </h6>
+                        <p class="text-muted mb-1 mt-1">
+                            <small>
+                                {{ rec.year }} &middot; {{ rec.genres_display }}
+                            </small>
+                        </p>
+                    </div>
+                    <span class="badge bg-warning text-dark">
+                        &#9733; {{ rec.vote_average }}
+                    </span>
+                </div>
+                <div class="mt-2">
+                    <span class="badge bg-primary score-badge">
+                        Skor kecocokan: {{ rec.xgb_score_pct }}%
+                    </span>
+                </div>
+
+                {% if rec.reasons %}
+                <div class="mt-3">
+                    <small class="text-muted d-block mb-1">Kenapa direkomendasikan?</small>
+                    <ul class="mb-0 ps-3">
+                        {% for alasan in rec.reasons %}
+                        <li><small>{{ alasan }}</small></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center my-4">
+    <a href="{{ url_for('rating') }}" class="btn btn-outline-primary">
+        Beri Rating Lagi
+    </a>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        Beranda
+    </a>
+</div>
+{% endblock %}

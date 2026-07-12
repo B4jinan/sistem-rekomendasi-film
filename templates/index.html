@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Beranda — Rekomendasi Film{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="card shadow-sm border-0 p-5">
+            <h1 class="mb-3">🎬 Sistem Rekomendasi Film</h1>
+            <p class="lead text-muted mb-4">
+                Dapatkan 10 rekomendasi film personal berdasarkan selera Anda,
+                menggunakan metode hybrid <strong>Collaborative Filtering</strong>,
+                <strong>Content-Based Filtering</strong>, dan <strong>XGBoost</strong>.
+            </p>
+            <div class="d-grid gap-2 col-6 mx-auto">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    Mulai Sekarang
+                </a>
+            </div>
+            <p class="text-muted mt-4 mb-0">
+                <small>Cukup beri rating pada beberapa film yang Anda kenal,
+                sistem akan mempelajari selera Anda.</small>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

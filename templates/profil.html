@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+<div style="max-width: 820px;" class="mx-auto">
+
+    <!-- Info user -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1">{{ nama }}</h3>
+                <p class="text-muted mb-0">{{ email }}</p>
+            </div>
+            <a href="{{ url_for('edit_akun') }}" class="btn btn-outline-primary btn-sm">Edit Akun</a>
+        </div>
+    </div>
+
+    <!-- Genre favorit -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Genre Favorit</h5>
+            {% if fav_genres %}
+                {% for g in fav_genres %}
+                    <span class="badge bg-primary fs-6 me-1 mb-1">{{ g }}</span>
+                {% endfor %}
+                <p class="text-muted small mt-2 mb-0">
+                    Dihitung dari film yang kamu beri rating 3 ke atas.
+                </p>
+            {% else %}
+                <p class="text-muted mb-0">
+                    Belum ada genre favorit. Beri rating beberapa film (3 ke atas) dulu.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Riwayat rating -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Riwayat Rating
+                <span class="text-muted fs-6">({{ history|length }} film)</span>
+            </h5>
+            {% if history %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Judul</th>
+                                <th>Genre</th>
+                                <th class="text-center">Tahun</th>
+                                <th class="text-center">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in history %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('film_detail', tmdb_id=h.tmdb_id) }}"
+                                       class="text-decoration-none">{{ h.title }}</a>
+                                </td>
+                                <td><span class="text-muted small">{{ h.genres }}</span></td>
+                                <td class="text-center">{{ h.year }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark">&#9733; {{ h.rating }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">Belum ada film yang kamu rating.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

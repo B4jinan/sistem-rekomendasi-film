@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Edit Akun{% endblock %}
+
+{% block content %}
+<div class="mx-auto" style="max-width: 560px;">
+    <a href="{{ url_for('profil') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Profil</a>
+    <h3 class="mb-3">Edit Akun</h3>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <p class="mb-1"><strong>Nama:</strong> {{ nama }}</p>
+            <p class="mb-0"><strong>Email:</strong> {{ email }}
+                <span class="text-muted small">(tidak bisa diubah)</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2">
+        <a href="{{ url_for('ganti_nama') }}" class="btn btn-outline-primary">Ganti Nama</a>
+        <a href="{{ url_for('ganti_password') }}" class="btn btn-outline-primary">Ganti Password</a>
+    </div>
+</div>
+{% endblock %}

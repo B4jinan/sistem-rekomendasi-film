@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Ganti Nama{% endblock %}
+
+{% block content %}
+<div class="mx-auto" style="max-width: 460px;">
+    <a href="{{ url_for('edit_akun') }}" class="btn btn-link px-0 mb-2">&larr; Kembali</a>
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <h4 class="card-title mb-4">Ganti Nama</h4>
+            <form method="POST" action="{{ url_for('ganti_nama') }}">
+                <div class="mb-3">
+                    <label for="nama" class="form-label">Nama Baru</label>
+                    <input type="text" class="form-control" id="nama" name="nama"
+                           value="{{ nama }}" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Simpan</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
