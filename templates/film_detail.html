@@ -20,7 +20,23 @@
         </div>
         <hr>
         <h6>Sinopsis</h6>
-        <p class="mb-0">{{ film.overview }}</p>
+        <p>{{ film.overview }}</p>
+
+        <hr>
+        <h6>Beri Rating Film Ini</h6>
+        {% if current_rating %}
+        <p class="text-muted small mb-2">Rating kamu saat ini: &#9733; {{ current_rating }}</p>
+        {% endif %}
+        <form method="POST" action="{{ url_for('rate_film', tmdb_id=film.tmdb_id) }}">
+            <div class="star-rating mb-2">
+                <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
+                <input type="radio" id="star4" name="rating" value="4"><label for="star4">&#9733;</label>
+                <input type="radio" id="star3" name="rating" value="3"><label for="star3">&#9733;</label>
+                <input type="radio" id="star2" name="rating" value="2"><label for="star2">&#9733;</label>
+                <input type="radio" id="star1" name="rating" value="1"><label for="star1">&#9733;</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Simpan Rating</button>
+        </form>
     </div>
 </div>
 

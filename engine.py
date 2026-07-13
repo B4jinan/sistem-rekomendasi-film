@@ -86,6 +86,18 @@ class RecommenderEngine:
         else:
             print("[INFO] movies_clean.csv tidak ditemukan — sinopsis dikosongkan.")
 
+        # Daftar genre unik untuk filter katalog
+        _genres = set()
+        for g in self.film["genres"].dropna():
+            for x in str(g).split("|"):
+                if x:
+                    _genres.add(x)
+        self.all_genres = sorted(_genres)
+
+        # Daftar dekade untuk filter tahun katalog (mis. 2010, 2000, ...)
+        _years = self.film["year"].dropna()
+        self.decades = sorted({int(y) // 10 * 10 for y in _years}, reverse=True)
+
     # -------------------------------------------------------------------------
     # LOOKUP — ambil info 1 film berdasarkan tmdbId (untuk profil & detail film)
     # -------------------------------------------------------------------------
@@ -125,6 +137,67 @@ class RecommenderEngine:
                 "vote_average": info.get("vote_average"),
             })
         return hasil
+
+    # -------------------------------------------------------------------------
+    # KATALOG — telusuri semua film (search + filter genre + pagination)
+    # -------------------------------------------------------------------------
+    def browse_films(self, genre=None, query=None, year_decade=None,
+                     sort="title", page=1, per_page=50):
+        df = self.film
+
+        if query:
+            q = query.strip()
+            if q:
+                df = df[df["title"].str.contains(q, case=False, na=False, regex=False)]
+
+        if genre:
+            df = df[df["genres"].fillna("").apply(lambda g: genre in g.split("|"))]
+
+        if year_decade is not None:
+            try:
+                dec = int(year_decade)
+                df = df[(df["year"] // 10 * 10) == dec]
+            except (TypeError, ValueError):
+                pass
+
+        # Urutkan sesuai pilihan sort
+        if sort == "rating":
+            df = df.sort_values("vote_average", ascending=False, na_position="last")
+        elif sort == "year":
+            df = df.sort_values("year", ascending=False, na_position="last")
+        else:  # default: judul A-Z
+            df = df.sort_values("title", key=lambda s: s.astype(str).str.lower(),
+                                na_position="last")
+
+        total = len(df)
+        per_page = max(1, int(per_page))
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = max(1, min(int(page), total_pages))
+        start = (page - 1) * per_page
+        page_df = df.iloc[start:start + per_page]
+
+        films = []
+        for _, row in page_df.iterrows():
+            g = row.get("genres")
+            try:
+                year = int(row["year"])
+            except (TypeError, ValueError):
+                year = "-"
+            films.append({
+                "tmdbId": int(row["tmdbId"]),
+                "title": row.get("title"),
+                "year": year,
+                "genres_display": (str(g).replace("|", ", ")
+                                   if isinstance(g, str) and g else "-"),
+                "vote_average": row.get("vote_average"),
+            })
+
+        return {
+            "films": films,
+            "total": total,
+            "page": page,
+            "total_pages": total_pages,
+        }
 
     # -------------------------------------------------------------------------
     # POPULAR FILMS — untuk halaman rating awal (20 film vote_count tertinggi)

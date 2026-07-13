@@ -75,6 +75,26 @@ def init_db():
 init_db()
 
 
+def load_user_ratings(user_id):
+    """Ambil rating user dari DB, dedup ambil rating terbaru per film."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT tmdb_id, rating FROM ratings WHERE user_id = ? "
+        "ORDER BY created_at DESC, id DESC",
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    seen = set()
+    ur = {}
+    for r in rows:
+        tid = int(r["tmdb_id"])
+        if tid in seen:
+            continue
+        seen.add(tid)
+        ur[tid] = float(r["rating"])
+    return ur
+
+
 # =============================================================================
 # ROUTES — AUTH
 # =============================================================================
@@ -226,21 +246,7 @@ def hasil():
     if "user_ratings" in session:
         user_ratings = {int(k): v for k, v in json.loads(session["user_ratings"]).items()}
     else:
-        conn = get_db()
-        rows = conn.execute(
-            "SELECT tmdb_id, rating FROM ratings WHERE user_id = ? "
-            "ORDER BY created_at DESC, id DESC",
-            (session["user_id"],)
-        ).fetchall()
-        conn.close()
-        seen = set()
-        user_ratings = {}
-        for r in rows:
-            tid = int(r["tmdb_id"])
-            if tid in seen:
-                continue
-            seen.add(tid)
-            user_ratings[tid] = float(r["rating"])
+        user_ratings = load_user_ratings(session["user_id"])
         if len(user_ratings) < 3:
             flash("Beri rating minimal 3 film dulu untuk melihat rekomendasi.", "warning")
             return redirect(url_for("rating"))
@@ -459,7 +465,79 @@ def film_detail(tmdb_id):
         except (TypeError, ValueError):
             s["year"] = "-"
 
-    return render_template("film_detail.html", film=film, similar=similar)
+    # Rating user saat ini untuk film ini (kalau sudah pernah)
+    conn = get_db()
+    row = conn.execute(
+        "SELECT rating FROM ratings WHERE user_id = ? AND tmdb_id = ? "
+        "ORDER BY created_at DESC, id DESC LIMIT 1",
+        (session["user_id"], tmdb_id)
+    ).fetchone()
+    conn.close()
+    current_rating = row["rating"] if row else None
+
+    return render_template("film_detail.html", film=film, similar=similar,
+                           current_rating=current_rating)
+
+
+# =============================================================================
+# ROUTES — KATALOG & RATING FILM
+# =============================================================================
+@app.route("/katalog")
+def katalog():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    genre = request.args.get("genre", "").strip() or None
+    query = request.args.get("q", "").strip() or None
+    year = request.args.get("year", "").strip() or None
+    sort = request.args.get("sort", "title").strip() or "title"
+    try:
+        page = int(request.args.get("page", 1))
+    except ValueError:
+        page = 1
+
+    result = engine.browse_films(genre=genre, query=query, year_decade=year,
+                                 sort=sort, page=page, per_page=50)
+    return render_template("katalog.html",
+                          result=result,
+                          genres=engine.all_genres,
+                          decades=engine.decades,
+                          sel_genre=genre or "",
+                          sel_year=year or "",
+                          sel_sort=sort,
+                          query=query or "")
+
+
+@app.route("/rate_film/<int:tmdb_id>", methods=["POST"])
+def rate_film(tmdb_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    info = engine.get_film_info(tmdb_id)
+    if info is None:
+        flash("Film tidak ditemukan.", "warning")
+        return redirect(url_for("katalog"))
+
+    try:
+        r = float(request.form.get("rating", ""))
+    except ValueError:
+        flash("Rating tidak valid.", "danger")
+        return redirect(url_for("film_detail", tmdb_id=tmdb_id))
+
+    if r < 1 or r > 5:
+        flash("Rating harus antara 1 sampai 5.", "danger")
+        return redirect(url_for("film_detail", tmdb_id=tmdb_id))
+
+    conn = get_db()
+    conn.execute("INSERT INTO ratings (user_id, tmdb_id, rating) VALUES (?, ?, ?)",
+                 (session["user_id"], tmdb_id, r))
+    conn.commit()
+    conn.close()
+
+    # Perbarui session supaya rekomendasi memperhitungkan rating baru
+    session["user_ratings"] = json.dumps(load_user_ratings(session["user_id"]))
+    flash("Rating tersimpan. Rekomendasimu akan menyesuaikan.", "success")
+    return redirect(url_for("film_detail", tmdb_id=tmdb_id))
 
 
 if __name__ == "__main__":

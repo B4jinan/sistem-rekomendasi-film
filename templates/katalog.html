@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Katalog Film{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Katalog Film</h3>
+
+<form method="GET" action="{{ url_for('katalog') }}" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="q" value="{{ query }}" class="form-control"
+               placeholder="Cari judul film...">
+    </div>
+    <div class="col-md-3">
+        <select name="genre" class="form-select">
+            <option value="">Semua Genre</option>
+            {% for g in genres %}
+            <option value="{{ g }}" {% if g == sel_genre %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="year" class="form-select">
+            <option value="">Semua Tahun</option>
+            {% for d in decades %}
+            <option value="{{ d }}" {% if d|string == sel_year %}selected{% endif %}>{{ d }}-an</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="sort" class="form-select">
+            <option value="title"  {% if sel_sort == 'title'  %}selected{% endif %}>Judul (A-Z)</option>
+            <option value="rating" {% if sel_sort == 'rating' %}selected{% endif %}>Rating Tertinggi</option>
+            <option value="year"   {% if sel_sort == 'year'   %}selected{% endif %}>Tahun Terbaru</option>
+        </select>
+    </div>
+    <div class="col-md-1 d-grid">
+        <button type="submit" class="btn btn-primary">Cari</button>
+    </div>
+</form>
+
+<p class="text-muted small">{{ result.total }} film ditemukan.</p>
+
+{% if result.films %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white">
+        <thead>
+            <tr>
+                <th>Judul</th>
+                <th>Genre</th>
+                <th class="text-center">Tahun</th>
+                <th class="text-center">Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in result.films %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('film_detail', tmdb_id=f.tmdbId) }}"
+                       class="text-decoration-none">{{ f.title }}</a>
+                </td>
+                <td><span class="text-muted small">{{ f.genres_display }}</span></td>
+                <td class="text-center">{{ f.year }}</td>
+                <td class="text-center">
+                    <span class="badge bg-warning text-dark">&#9733; {{ f.vote_average }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if result.total_pages > 1 %}
+<nav>
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if result.page <= 1 %}disabled{% endif %}">
+        <a class="page-link"
+           href="{{ url_for('katalog', page=result.page-1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Sebelumnya</a>
+    </li>
+    <li class="page-item disabled">
+        <span class="page-link">Halaman {{ result.page }} / {{ result.total_pages }}</span>
+    </li>
+    <li class="page-item {% if result.page >= result.total_pages %}disabled{% endif %}">
+        <a class="page-link"
+           href="{{ url_for('katalog', page=result.page+1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Berikutnya</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<p class="text-muted">Tidak ada film yang cocok dengan pencarianmu.</p>
+{% endif %}
+{% endblock %}
