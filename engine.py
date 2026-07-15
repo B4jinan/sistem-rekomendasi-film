@@ -41,6 +41,10 @@ POSTER_KECIL = "w92"     # thumbnail katalog
 POSTER_SEDANG = "w185"   # kartu dashboard
 POSTER_BESAR = "w342"    # halaman detail film
 
+# Trailer. Yang disimpan di film_trailers.csv hanya kode video YouTube
+# (mis. "YoHD9XEInc0"); alamat lengkapnya dirakit dengan awalan di bawah.
+YOUTUBE_WATCH_URL = "https://www.youtube.com/watch?v="
+
 
 class RecommenderEngine:
     """Memuat semua artifact sekali, lalu melayani rekomendasi cold-start."""
@@ -123,6 +127,28 @@ class RecommenderEngine:
         else:
             print("[INFO] film_posters.csv tidak ditemukan — poster dilewati.")
 
+        # Trailer: kode video YouTube tiap film, hasil pengambilan sekali dari
+        # TMDB API (lihat script ambil_trailer_tmdb.py). Film tanpa trailer
+        # otomatis tidak menampilkan tombol trailer.
+        self.trailer_by_id = {}
+        path_trailers = os.path.join(data_dir, "film_trailers.csv")
+        if os.path.exists(path_trailers):
+            try:
+                tf = pd.read_csv(path_trailers)
+                tf["trailer_key"] = tf["trailer_key"].fillna("").astype(str)
+                self.trailer_by_id = dict(
+                    zip(tf["tmdbId"].astype(int), tf["trailer_key"])
+                )
+                _n_total = len(self.trailer_by_id)
+                _n_ada = sum(1 for v in self.trailer_by_id.values() if v)
+                _pct = (_n_ada / _n_total * 100) if _n_total else 0
+                print(f"Trailer dimuat: {_n_ada}/{_n_total} film punya trailer "
+                      f"({_pct:.1f}%).")
+            except Exception as e:
+                print(f"[WARN] Gagal memuat film_trailers.csv: {e}")
+        else:
+            print("[INFO] film_trailers.csv tidak ditemukan — trailer dilewati.")
+
         # Daftar genre unik untuk filter katalog
         _genres = set()
         for g in self.film["genres"].dropna():
@@ -157,6 +183,13 @@ class RecommenderEngine:
             return None
         return f"{POSTER_BASE_URL}{ukuran}{path}"
 
+    def get_trailer_url(self, tmdb_id):
+        """Alamat trailer YouTube, atau None kalau film tidak punya trailer."""
+        key = self.trailer_by_id.get(int(tmdb_id), "")
+        if not key:
+            return None
+        return f"{YOUTUBE_WATCH_URL}{key}"
+
     def get_similar_films(self, tmdb_id, n=6):
         """Film mirip berdasarkan kemiripan konten (TF-IDF cosine similarity)."""
         idx = self.fid_to_idx.get(int(tmdb_id))
@@ -183,6 +216,7 @@ class RecommenderEngine:
                 "year": info.get("year"),
                 "genres": info.get("genres"),
                 "vote_average": info.get("vote_average"),
+                "poster_url": self.get_poster_url(int(fid), POSTER_KECIL),
             })
         return hasil
 
@@ -471,9 +505,11 @@ class RecommenderEngine:
                 "vote_average", "vote_count", "genres", "year"]
         recs = result[cols].to_dict("records")
 
-        # Rakit alasan tiap film
+        # Rakit alasan + lampirkan poster & trailer tiap film
         liked_genres = self._user_liked_genres(user_ratings)
         for rec in recs:
             rec["reasons"] = self._build_reasons(rec, liked_genres)
+            rec["poster_url"] = self.get_poster_url(rec["tmdbId"], POSTER_SEDANG)
+            rec["trailer_url"] = self.get_trailer_url(rec["tmdbId"])
 
         return recs

@@ -6,6 +6,17 @@
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-3">
+            {% if film.poster_url %}
+            <img class="poster poster-penuh" src="{{ film.poster_url }}"
+                 alt="Poster {{ film.title }}"
+                 onerror="this.style.visibility='hidden'">
+            {% else %}
+            <div class="poster poster-penuh poster-kosong">Tanpa<br>Poster</div>
+            {% endif %}
+        </div>
+        <div class="col-md-9">
         <div class="d-flex justify-content-between align-items-start">
             <div>
                 <h3 class="mb-1">{{ film.title }}</h3>
@@ -18,6 +29,14 @@
                 &#9733; {{ film.vote_average }}
             </span>
         </div>
+
+        {% if film.trailer_url %}
+        <a href="{{ film.trailer_url }}" target="_blank" rel="noopener"
+           class="btn btn-danger btn-sm mb-2">
+            &#9654; Tonton Trailer di YouTube
+        </a>
+        {% endif %}
+
         <hr>
         <h6>Sinopsis</h6>
         <p>{{ film.overview }}</p>
@@ -46,6 +65,8 @@
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Simpan Rating</button>
         </form>
+        </div><!-- /col-md-9 -->
+      </div><!-- /row -->
     </div>
 </div>
 
@@ -56,15 +77,24 @@
     <div class="col-md-6">
         <div class="card film-card shadow-sm border-0">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="mb-1">
-                            <a href="{{ url_for('katalog.film_detail', tmdb_id=s.tmdbId) }}"
-                               class="text-decoration-none text-reset">{{ s.title }}</a>
-                        </h6>
-                        <p class="text-muted mb-0">
-                            <small>{{ s.year }} &middot; {{ s.genres_display }}</small>
-                        </p>
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="d-flex gap-2">
+                        {% if s.poster_url %}
+                        <img class="poster-mini" src="{{ s.poster_url }}"
+                             alt="Poster {{ s.title }}" loading="lazy"
+                             onerror="this.style.visibility='hidden'">
+                        {% else %}
+                        <div class="poster-mini"></div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('katalog.film_detail', tmdb_id=s.tmdbId) }}"
+                                   class="text-decoration-none text-reset">{{ s.title }}</a>
+                            </h6>
+                            <p class="text-muted mb-0">
+                                <small>{{ s.year }} &middot; {{ s.genres_display }}</small>
+                            </p>
+                        </div>
                     </div>
                     <span class="badge bg-warning text-dark">
                         &#9733; {{ s.vote_average }}

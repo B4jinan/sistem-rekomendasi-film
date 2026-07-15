@@ -12,6 +12,17 @@
     <div class="col-md-6">
         <div class="card film-card shadow-sm border-0">
             <div class="card-body">
+              <div class="d-flex gap-3">
+                <div style="flex: 0 0 80px;">
+                    {% if rec.poster_url %}
+                    <img class="poster poster-penuh" src="{{ rec.poster_url }}"
+                         alt="Poster {{ rec.title }}" loading="lazy"
+                         onerror="this.style.visibility='hidden'">
+                    {% else %}
+                    <div class="poster poster-penuh poster-kosong">Tanpa<br>Poster</div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="badge bg-secondary me-1">#{{ loop.index }}</span>
@@ -29,10 +40,15 @@
                         &#9733; {{ rec.vote_average }}
                     </span>
                 </div>
-                <div class="mt-2">
+                <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
                     <span class="badge bg-primary score-badge">
                         Skor kecocokan: {{ rec.xgb_score_pct }}%
                     </span>
+                    {% if rec.trailer_url %}
+                    <a href="{{ rec.trailer_url }}" target="_blank" rel="noopener"
+                       class="btn btn-outline-danger btn-sm py-0"
+                       style="font-size: .75rem;">&#9654; Trailer</a>
+                    {% endif %}
                 </div>
 
                 {% if rec.reasons %}
@@ -45,7 +61,8 @@
                     </ul>
                 </div>
                 {% endif %}
-
+                </div><!-- /flex-grow-1 -->
+              </div><!-- /d-flex -->
             </div>
         </div>
     </div>

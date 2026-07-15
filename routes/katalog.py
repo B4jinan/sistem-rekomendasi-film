@@ -3,6 +3,7 @@ import json
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, session, flash)
 from db import get_db, load_user_ratings
+from engine import POSTER_BESAR
 from extensions import engine
 
 katalog_bp = Blueprint("katalog", __name__)
@@ -40,6 +41,8 @@ def film_detail(tmdb_id):
         "vote_average": info.get("vote_average"),
         "runtime": runtime_disp,
         "overview": overview if overview else "Sinopsis tidak tersedia.",
+        "poster_url": engine.get_poster_url(tmdb_id, POSTER_BESAR),
+        "trailer_url": engine.get_trailer_url(tmdb_id),
     }
 
     similar = engine.get_similar_films(tmdb_id, n=6)
