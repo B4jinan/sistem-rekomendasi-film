@@ -1,11 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Katalog Film{% endblock %}
 
+{#
+  Macro header kolom yang bisa diklik untuk mengurutkan.
+  - Kalau kolom ini SEDANG dipakai mengurutkan -> klik akan membalik arahnya.
+  - Kalau belum -> klik memakai arah bawaan kolom itu (arah_awal).
+  - Halaman sengaja tidak diikutkan, supaya sortir baru mulai dari halaman 1.
+#}
+{% macro th_urut(kolom, label, arah_awal, kelas='') %}
+<th class="{{ kelas }}">
+    <a class="text-decoration-none text-reset"
+       href="{{ url_for('katalog.katalog',
+                        q=query, genre=sel_genre, year=sel_year,
+                        sort=kolom,
+                        arah=('desc' if (sel_sort == kolom and sel_arah == 'asc')
+                              else ('asc' if sel_sort == kolom else arah_awal))) }}">
+        {{ label }}
+        {% if sel_sort == kolom %}
+            <span class="text-primary">{{ '&#9650;'|safe if sel_arah == 'asc' else '&#9660;'|safe }}</span>
+        {% else %}
+            <span class="text-muted opacity-25">&#8597;</span>
+        {% endif %}
+    </a>
+</th>
+{% endmacro %}
+
 {% block content %}
 <h3 class="mb-3">Katalog Film</h3>
 
 <form method="GET" action="{{ url_for('katalog.katalog') }}" class="row g-2 mb-3">
-    <div class="col-md-4">
+    {# Sortir dibawa lewat kolom tabel, bukan lewat form -> disimpan diam-diam
+       supaya urutan tidak hilang saat pengguna mengubah filter. #}
+    <input type="hidden" name="sort" value="{{ sel_sort }}">
+    <input type="hidden" name="arah" value="{{ sel_arah }}">
+
+    <div class="col-md-5">
         <input type="text" name="q" value="{{ query }}" class="form-control"
                placeholder="Cari judul film...">
     </div>
@@ -25,29 +54,25 @@
             {% endfor %}
         </select>
     </div>
-    <div class="col-md-2">
-        <select name="sort" class="form-select">
-            <option value="title"  {% if sel_sort == 'title'  %}selected{% endif %}>Judul (A-Z)</option>
-            <option value="rating" {% if sel_sort == 'rating' %}selected{% endif %}>Rating Tertinggi</option>
-            <option value="year"   {% if sel_sort == 'year'   %}selected{% endif %}>Tahun Terbaru</option>
-        </select>
-    </div>
-    <div class="col-md-1 d-grid">
+    <div class="col-md-2 d-grid">
         <button type="submit" class="btn btn-primary">Cari</button>
     </div>
 </form>
 
-<p class="text-muted small">{{ result.total }} film ditemukan.</p>
+<p class="text-muted small">
+    {{ result.total }} film ditemukan.
+    <span class="ms-1">Klik judul kolom untuk mengurutkan.</span>
+</p>
 
 {% if result.films %}
 <div class="table-responsive">
     <table class="table table-hover align-middle bg-white">
         <thead>
             <tr>
-                <th>Judul</th>
+                {{ th_urut('title', 'Judul', 'asc') }}
                 <th>Genre</th>
-                <th class="text-center">Tahun</th>
-                <th class="text-center">Rating</th>
+                {{ th_urut('year', 'Tahun', 'desc', 'text-center') }}
+                {{ th_urut('rating', 'Rating', 'desc', 'text-center') }}
             </tr>
         </thead>
         <tbody>
@@ -82,14 +107,18 @@
   <ul class="pagination justify-content-center">
     <li class="page-item {% if result.page <= 1 %}disabled{% endif %}">
         <a class="page-link"
-           href="{{ url_for('katalog.katalog', page=result.page-1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Sebelumnya</a>
+           href="{{ url_for('katalog.katalog', page=result.page-1, q=query,
+                            genre=sel_genre, year=sel_year,
+                            sort=sel_sort, arah=sel_arah) }}">Sebelumnya</a>
     </li>
     <li class="page-item disabled">
         <span class="page-link">Halaman {{ result.page }} / {{ result.total_pages }}</span>
     </li>
     <li class="page-item {% if result.page >= result.total_pages %}disabled{% endif %}">
         <a class="page-link"
-           href="{{ url_for('katalog.katalog', page=result.page+1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Berikutnya</a>
+           href="{{ url_for('katalog.katalog', page=result.page+1, q=query,
+                            genre=sel_genre, year=sel_year,
+                            sort=sel_sort, arah=sel_arah) }}">Berikutnya</a>
     </li>
   </ul>
 </nav>

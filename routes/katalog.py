@@ -76,13 +76,22 @@ def katalog():
     query = request.args.get("q", "").strip() or None
     year = request.args.get("year", "").strip() or None
     sort = request.args.get("sort", "title").strip() or "title"
+    if sort not in ("title", "year", "rating"):
+        sort = "title"
+
+    # Arah sortir. Kalau belum ditentukan, pakai arah yang paling masuk akal
+    # untuk tiap kolom: judul dari A-Z, tapi rating & tahun dari yang tertinggi.
+    arah = request.args.get("arah", "").strip()
+    if arah not in ("asc", "desc"):
+        arah = "asc" if sort == "title" else "desc"
+
     try:
         page = int(request.args.get("page", 1))
     except ValueError:
         page = 1
 
     result = engine.browse_films(genre=genre, query=query, year_decade=year,
-                                 sort=sort, page=page, per_page=50)
+                                 sort=sort, arah=arah, page=page, per_page=50)
     return render_template("katalog.html",
                           result=result,
                           genres=engine.all_genres,
@@ -90,6 +99,7 @@ def katalog():
                           sel_genre=genre or "",
                           sel_year=year or "",
                           sel_sort=sort,
+                          sel_arah=arah,
                           query=query or "")
 
 

@@ -287,7 +287,7 @@ class RecommenderEngine:
     # KATALOG — telusuri semua film (search + filter genre + pagination)
     # -------------------------------------------------------------------------
     def browse_films(self, genre=None, query=None, year_decade=None,
-                     sort="title", page=1, per_page=50):
+                     sort="title", arah="asc", page=1, per_page=50):
         df = self.film
 
         if query:
@@ -305,14 +305,16 @@ class RecommenderEngine:
             except (TypeError, ValueError):
                 pass
 
-        # Urutkan sesuai pilihan sort
+        # Urutkan sesuai kolom (sort) dan arahnya (arah).
+        # Film tanpa nilai selalu ditaruh di akhir, arah apa pun.
+        naik = (arah == "asc")
         if sort == "rating":
-            df = df.sort_values("vote_average", ascending=False, na_position="last")
+            df = df.sort_values("vote_average", ascending=naik, na_position="last")
         elif sort == "year":
-            df = df.sort_values("year", ascending=False, na_position="last")
-        else:  # default: judul A-Z
+            df = df.sort_values("year", ascending=naik, na_position="last")
+        else:  # judul
             df = df.sort_values("title", key=lambda s: s.astype(str).str.lower(),
-                                na_position="last")
+                                ascending=naik, na_position="last")
 
         total = len(df)
         per_page = max(1, int(per_page))
