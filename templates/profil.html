@@ -11,7 +11,7 @@
                 <h3 class="mb-1">{{ nama }}</h3>
                 <p class="text-muted mb-0">{{ email }}</p>
             </div>
-            <a href="{{ url_for('edit_akun') }}" class="btn btn-outline-primary btn-sm">Edit Akun</a>
+            <a href="{{ url_for('profil.edit_akun') }}" class="btn btn-outline-primary btn-sm">Edit Akun</a>
         </div>
     </div>
 
@@ -49,19 +49,30 @@
                                 <th>Genre</th>
                                 <th class="text-center">Tahun</th>
                                 <th class="text-center">Rating</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for h in history %}
                             <tr>
                                 <td>
-                                    <a href="{{ url_for('film_detail', tmdb_id=h.tmdb_id) }}"
+                                    <a href="{{ url_for('katalog.film_detail', tmdb_id=h.tmdb_id) }}"
                                        class="text-decoration-none">{{ h.title }}</a>
                                 </td>
                                 <td><span class="text-muted small">{{ h.genres }}</span></td>
                                 <td class="text-center">{{ h.year }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-warning text-dark">&#9733; {{ h.rating }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <form method="POST" class="d-inline"
+                                          action="{{ url_for('katalog.hapus_rating', tmdb_id=h.tmdb_id) }}"
+                                          onsubmit="return confirm('Hapus rating film ini?');">
+                                        <input type="hidden" name="asal" value="profil">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0">
+                                            Hapus
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}

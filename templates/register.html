@@ -8,7 +8,7 @@
             <h3 class="card-title mb-1">Daftar Akun</h3>
             <p class="text-muted mb-4">Buat akun untuk mulai memakai sistem rekomendasi.</p>
 
-            <form method="POST" action="{{ url_for('register') }}">
+            <form method="POST" action="{{ url_for('auth.register') }}">
                 <div class="mb-3">
                     <label for="nama" class="form-label">Nama</label>
                     <input type="text" class="form-control" id="nama" name="nama"
@@ -29,7 +29,7 @@
 
             <hr class="my-4">
             <p class="text-center mb-0">
-                Sudah punya akun? <a href="{{ url_for('login') }}">Login di sini</a>
+                Sudah punya akun? <a href="{{ url_for('auth.login') }}">Login di sini</a>
             </p>
         </div>
     </div>

@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="mx-auto" style="max-width: 560px;">
-    <a href="{{ url_for('profil') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Profil</a>
+    <a href="{{ url_for('profil.profil') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Profil</a>
     <h3 class="mb-3">Edit Akun</h3>
 
     <div class="card shadow-sm mb-3">
@@ -16,8 +16,8 @@
     </div>
 
     <div class="d-grid gap-2">
-        <a href="{{ url_for('ganti_nama') }}" class="btn btn-outline-primary">Ganti Nama</a>
-        <a href="{{ url_for('ganti_password') }}" class="btn btn-outline-primary">Ganti Password</a>
+        <a href="{{ url_for('profil.ganti_nama') }}" class="btn btn-outline-primary">Ganti Nama</a>
+        <a href="{{ url_for('profil.ganti_password') }}" class="btn btn-outline-primary">Ganti Password</a>
     </div>
 </div>
 {% endblock %}

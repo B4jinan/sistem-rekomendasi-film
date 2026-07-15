@@ -8,7 +8,7 @@
             <h3 class="card-title mb-1">Login</h3>
             <p class="text-muted mb-4">Masuk untuk mendapatkan rekomendasi film.</p>
 
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}">
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <input type="email" class="form-control" id="email" name="email"
@@ -24,7 +24,7 @@
 
             <hr class="my-4">
             <p class="text-center mb-0">
-                Belum punya akun? <a href="{{ url_for('register') }}">Daftar di sini</a>
+                Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar di sini</a>
             </p>
         </div>
     </div>

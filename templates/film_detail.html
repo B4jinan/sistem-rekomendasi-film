@@ -25,9 +25,18 @@
         <hr>
         <h6>Beri Rating Film Ini</h6>
         {% if current_rating %}
-        <p class="text-muted small mb-2">Rating kamu saat ini: &#9733; {{ current_rating }}</p>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="text-muted small">Rating kamu saat ini: &#9733; {{ current_rating }}</span>
+            <form method="POST" class="d-inline"
+                  action="{{ url_for('katalog.hapus_rating', tmdb_id=film.tmdb_id) }}"
+                  onsubmit="return confirm('Hapus rating untuk film ini?');">
+                <button type="submit" class="btn btn-outline-danger btn-sm py-0">
+                    Hapus Rating
+                </button>
+            </form>
+        </div>
         {% endif %}
-        <form method="POST" action="{{ url_for('rate_film', tmdb_id=film.tmdb_id) }}">
+        <form method="POST" action="{{ url_for('katalog.rate_film', tmdb_id=film.tmdb_id) }}">
             <div class="star-rating mb-2">
                 <input type="radio" id="star5" name="rating" value="5" required><label for="star5">&#9733;</label>
                 <input type="radio" id="star4" name="rating" value="4"><label for="star4">&#9733;</label>
@@ -50,7 +59,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <h6 class="mb-1">
-                            <a href="{{ url_for('film_detail', tmdb_id=s.tmdbId) }}"
+                            <a href="{{ url_for('katalog.film_detail', tmdb_id=s.tmdbId) }}"
                                class="text-decoration-none text-reset">{{ s.title }}</a>
                         </h6>
                         <p class="text-muted mb-0">

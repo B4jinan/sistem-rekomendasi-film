@@ -17,12 +17,30 @@
         .star-rating label:hover,
         .star-rating label:hover ~ label { color: #ffc107; }
         .score-badge { font-size: 0.8rem; }
+        /* Baris film geser-samping di dashboard */
+        .row-scroll { display: flex; gap: .75rem; overflow-x: auto;
+                      padding: .25rem .25rem .75rem .25rem; }
+        .row-scroll::-webkit-scrollbar { height: 8px; }
+        .row-scroll::-webkit-scrollbar-thumb { background: #c7cdd6; border-radius: 4px; }
+        .row-scroll::-webkit-scrollbar-track { background: transparent; }
+        .row-card { flex: 0 0 190px; }
+        /* Poster film. Rasio 2:3 mengikuti standar poster TMDB.
+           Warna latar tampil sebagai placeholder kalau gambar tidak ada/gagal. */
+        .poster { width: 100%; aspect-ratio: 2 / 3; object-fit: cover;
+                  background: #e3e6ea; display: block;
+                  border-radius: .375rem .375rem 0 0; }
+        .poster-mini { width: 46px; aspect-ratio: 2 / 3; object-fit: cover;
+                       background: #e3e6ea; display: block; border-radius: .25rem;
+                       flex: 0 0 auto; }
+        .poster-kosong { display: flex; align-items: center; justify-content: center;
+                         color: #9aa3ad; font-size: .68rem; text-align: center;
+                         line-height: 1.2; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">🎬 RekomFilm</a>
+            <a class="navbar-brand" href="{{ url_for('auth.index') }}">🎬 RekomFilm</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navMenu" aria-controls="navMenu"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -32,25 +50,25 @@
                 {% if session.nama %}
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('rating') }}">Rating Film</a>
+                            <a class="nav-link" href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('hasil') }}">Rekomendasi</a>
+                            <a class="nav-link" href="{{ url_for('recommend.hasil') }}">Rekomendasi Saya</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('katalog') }}">Katalog</a>
+                            <a class="nav-link" href="{{ url_for('katalog.katalog') }}">Katalog</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profil') }}">Profil</a>
+                            <a class="nav-link" href="{{ url_for('profil.profil') }}">Profil</a>
                         </li>
                     </ul>
                     <div class="d-flex align-items-center">
                         <span class="navbar-text text-light me-3">Halo, {{ session.nama }}</span>
-                        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Keluar</a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Keluar</a>
                     </div>
                 {% else %}
                     <div class="ms-auto">
-                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">Masuk</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm">Masuk</a>
                     </div>
                 {% endif %}
             </div>

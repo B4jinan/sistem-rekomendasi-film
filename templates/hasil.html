@@ -16,7 +16,7 @@
                     <div>
                         <span class="badge bg-secondary me-1">#{{ loop.index }}</span>
                         <h6 class="d-inline">
-                            <a href="{{ url_for('film_detail', tmdb_id=rec.tmdbId) }}"
+                            <a href="{{ url_for('katalog.film_detail', tmdb_id=rec.tmdbId) }}"
                                class="text-decoration-none text-reset">{{ rec.title }}</a>
                         </h6>
                         <p class="text-muted mb-1 mt-1">
@@ -53,10 +53,10 @@
 </div>
 
 <div class="text-center my-4">
-    <a href="{{ url_for('rating') }}" class="btn btn-outline-primary">
+    <a href="{{ url_for('recommend.rating') }}" class="btn btn-outline-primary">
         Beri Rating Lagi
     </a>
-    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('auth.index') }}" class="btn btn-outline-secondary">
         Beranda
     </a>
 </div>

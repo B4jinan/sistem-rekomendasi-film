@@ -4,7 +4,7 @@
 {% block content %}
 <h3 class="mb-3">Katalog Film</h3>
 
-<form method="GET" action="{{ url_for('katalog') }}" class="row g-2 mb-3">
+<form method="GET" action="{{ url_for('katalog.katalog') }}" class="row g-2 mb-3">
     <div class="col-md-4">
         <input type="text" name="q" value="{{ query }}" class="form-control"
                placeholder="Cari judul film...">
@@ -54,8 +54,17 @@
             {% for f in result.films %}
             <tr>
                 <td>
-                    <a href="{{ url_for('film_detail', tmdb_id=f.tmdbId) }}"
-                       class="text-decoration-none">{{ f.title }}</a>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if f.poster_url %}
+                        <img class="poster-mini" src="{{ f.poster_url }}"
+                             alt="Poster {{ f.title }}" loading="lazy"
+                             onerror="this.style.visibility='hidden'">
+                        {% else %}
+                        <div class="poster-mini"></div>
+                        {% endif %}
+                        <a href="{{ url_for('katalog.film_detail', tmdb_id=f.tmdbId) }}"
+                           class="text-decoration-none">{{ f.title }}</a>
+                    </div>
                 </td>
                 <td><span class="text-muted small">{{ f.genres_display }}</span></td>
                 <td class="text-center">{{ f.year }}</td>
@@ -73,14 +82,14 @@
   <ul class="pagination justify-content-center">
     <li class="page-item {% if result.page <= 1 %}disabled{% endif %}">
         <a class="page-link"
-           href="{{ url_for('katalog', page=result.page-1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Sebelumnya</a>
+           href="{{ url_for('katalog.katalog', page=result.page-1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Sebelumnya</a>
     </li>
     <li class="page-item disabled">
         <span class="page-link">Halaman {{ result.page }} / {{ result.total_pages }}</span>
     </li>
     <li class="page-item {% if result.page >= result.total_pages %}disabled{% endif %}">
         <a class="page-link"
-           href="{{ url_for('katalog', page=result.page+1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Berikutnya</a>
+           href="{{ url_for('katalog.katalog', page=result.page+1, q=query, genre=sel_genre, year=sel_year, sort=sel_sort) }}">Berikutnya</a>
     </li>
   </ul>
 </nav>

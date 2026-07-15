@@ -13,6 +13,7 @@ import scipy.sparse as sp
 import xgboost as xgb
 import joblib
 import os
+from collections import Counter
 
 # =============================================================================
 # PARAMETER PIPELINE (sesuai dokumentasi hasil_cf/cbf/xgb.md)
@@ -26,6 +27,19 @@ RELEVANCE_LIKE_THRESHOLD = 3.0
 # Ambang untuk merakit kalimat "Mengapa direkomendasikan?"
 CBF_HIGH = 0.10        # cbf_score di atas ini dianggap "konten mirip" (range 0-0.51)
 VOTE_AVG_HIGH = 7.0    # vote_average di atas ini dianggap "penilaian tinggi" (skala 10)
+
+# Parameter dashboard (baris film statis, sama untuk semua pengguna)
+DASHBOARD_MIN_VOTES = 1000   # syarat minimal jumlah voter untuk baris "Rating Tertinggi"
+DASHBOARD_GENRE_ROWS = 6     # jumlah baris genre yang ditampilkan
+DASHBOARD_ROW_SIZE = 10      # jumlah film per baris
+
+# Poster TMDB. Yang disimpan di film_posters.csv hanya "poster_path"
+# (mis. "/abc123.jpg"); alamat lengkapnya dirakit dengan awalan di bawah.
+# Gambar diambil dari CDN gambar TMDB — tidak memakai API key & tanpa rate limit.
+POSTER_BASE_URL = "https://image.tmdb.org/t/p/"
+POSTER_KECIL = "w92"     # thumbnail katalog
+POSTER_SEDANG = "w185"   # kartu dashboard
+POSTER_BESAR = "w342"    # halaman detail film
 
 
 class RecommenderEngine:
@@ -86,6 +100,29 @@ class RecommenderEngine:
         else:
             print("[INFO] movies_clean.csv tidak ditemukan — sinopsis dikosongkan.")
 
+        # Poster: alamat poster tiap film, hasil pengambilan sekali dari TMDB API
+        # (lihat script ambil_poster_tmdb.py). Dimuat sebagai peta tmdbId ->
+        # poster_path. Kalau file tidak ada, poster dilewati dan aplikasi tetap
+        # berjalan dengan gambar placeholder.
+        self.poster_by_id = {}
+        path_posters = os.path.join(data_dir, "film_posters.csv")
+        if os.path.exists(path_posters):
+            try:
+                pf = pd.read_csv(path_posters)
+                pf["poster_path"] = pf["poster_path"].fillna("").astype(str)
+                self.poster_by_id = dict(
+                    zip(pf["tmdbId"].astype(int), pf["poster_path"])
+                )
+                _n_total = len(self.poster_by_id)
+                _n_ada = sum(1 for v in self.poster_by_id.values() if v)
+                _pct = (_n_ada / _n_total * 100) if _n_total else 0
+                print(f"Poster dimuat: {_n_ada}/{_n_total} film punya poster "
+                      f"({_pct:.1f}%).")
+            except Exception as e:
+                print(f"[WARN] Gagal memuat film_posters.csv: {e}")
+        else:
+            print("[INFO] film_posters.csv tidak ditemukan — poster dilewati.")
+
         # Daftar genre unik untuk filter katalog
         _genres = set()
         for g in self.film["genres"].dropna():
@@ -98,6 +135,10 @@ class RecommenderEngine:
         _years = self.film["year"].dropna()
         self.decades = sorted({int(y) // 10 * 10 for y in _years}, reverse=True)
 
+        # Dashboard: isinya statis (sama untuk semua pengguna) -> dihitung SEKALI
+        # saat startup, bukan tiap request.
+        self.dashboard_rows = self._build_dashboard()
+
     # -------------------------------------------------------------------------
     # LOOKUP — ambil info 1 film berdasarkan tmdbId (untuk profil & detail film)
     # -------------------------------------------------------------------------
@@ -108,6 +149,13 @@ class RecommenderEngine:
     def get_overview(self, tmdb_id):
         """Sinopsis film (string). Kosong kalau tidak tersedia."""
         return self.overview_by_id.get(int(tmdb_id), "")
+
+    def get_poster_url(self, tmdb_id, ukuran=POSTER_SEDANG):
+        """Alamat lengkap poster film, atau None kalau film tidak punya poster."""
+        path = self.poster_by_id.get(int(tmdb_id), "")
+        if not path:
+            return None
+        return f"{POSTER_BASE_URL}{ukuran}{path}"
 
     def get_similar_films(self, tmdb_id, n=6):
         """Film mirip berdasarkan kemiripan konten (TF-IDF cosine similarity)."""
@@ -137,6 +185,69 @@ class RecommenderEngine:
                 "vote_average": info.get("vote_average"),
             })
         return hasil
+
+    # -------------------------------------------------------------------------
+    # DASHBOARD — baris film per kategori (non-personal, berbasis popularitas)
+    # -------------------------------------------------------------------------
+    def _film_cards(self, df, ukuran_poster=POSTER_SEDANG):
+        """Ubah DataFrame film menjadi list dict siap tampil."""
+        cards = []
+        for _, row in df.iterrows():
+            g = row.get("genres")
+            try:
+                year = int(row["year"])
+            except (TypeError, ValueError):
+                year = "-"
+            fid = int(row["tmdbId"])
+            cards.append({
+                "tmdbId": fid,
+                "title": row.get("title"),
+                "year": year,
+                "genres_display": (str(g).replace("|", ", ")
+                                   if isinstance(g, str) and g else "-"),
+                "vote_average": row.get("vote_average"),
+                "poster_url": self.get_poster_url(fid, ukuran_poster),
+            })
+        return cards
+
+    def _build_dashboard(self, n=DASHBOARD_ROW_SIZE):
+        """Rakit baris-baris dashboard. CATATAN: ini BUKAN rekomendasi personal —
+        murni popularitas/penilaian, sama untuk semua pengguna. Rekomendasi
+        personal ada di method recommend() (pipeline CF -> CBF -> XGBoost)."""
+        rows = []
+
+        # 1. Film rating tertinggi. Disaring minimal jumlah voter supaya baris ini
+        #    tidak diisi film obscure bernilai 10 dari segelintir penilai.
+        top = self.film[self.film["vote_count"] >= DASHBOARD_MIN_VOTES]
+        top = top.sort_values("vote_average", ascending=False).head(n)
+        rows.append({
+            "title": "Film Rating Tertinggi",
+            "subtitle": f"Minimal {DASHBOARD_MIN_VOTES} penilaian",
+            "genre": None,
+            "films": self._film_cards(top),
+        })
+
+        # 2. Baris per genre dengan film terbanyak. Urutan dalam baris memakai
+        #    vote_count sebagai proksi popularitas (konsisten dengan halaman
+        #    rating awal yang juga memakai vote_count).
+        gc = Counter()
+        for g in self.film["genres"].dropna():
+            for x in str(g).split("|"):
+                if x:
+                    gc[x] += 1
+
+        for genre, _ in gc.most_common(DASHBOARD_GENRE_ROWS):
+            sel = self.film[self.film["genres"].fillna("").apply(
+                lambda s: genre in s.split("|"))]
+            sel = sel.sort_values("vote_count", ascending=False).head(n)
+            rows.append({
+                "title": f"Film {genre} Terpopuler",
+                "subtitle": None,
+                "genre": genre,
+                "films": self._film_cards(sel),
+            })
+
+        return rows
 
     # -------------------------------------------------------------------------
     # KATALOG — telusuri semua film (search + filter genre + pagination)
@@ -176,21 +287,7 @@ class RecommenderEngine:
         start = (page - 1) * per_page
         page_df = df.iloc[start:start + per_page]
 
-        films = []
-        for _, row in page_df.iterrows():
-            g = row.get("genres")
-            try:
-                year = int(row["year"])
-            except (TypeError, ValueError):
-                year = "-"
-            films.append({
-                "tmdbId": int(row["tmdbId"]),
-                "title": row.get("title"),
-                "year": year,
-                "genres_display": (str(g).replace("|", ", ")
-                                   if isinstance(g, str) and g else "-"),
-                "vote_average": row.get("vote_average"),
-            })
+        films = self._film_cards(page_df, ukuran_poster=POSTER_KECIL)
 
         return {
             "films": films,

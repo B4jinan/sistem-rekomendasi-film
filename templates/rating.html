@@ -25,17 +25,22 @@
                             {{ film.genres.replace("|", ", ") if film.genres else "-" }}
                         </small>
                     </p>
-                    <div class="star-rating">
-                        <input type="radio" id="r{{ film.tmdbId }}_5" name="rating_{{ film.tmdbId }}" value="5">
-                        <label for="r{{ film.tmdbId }}_5">&#9733;</label>
-                        <input type="radio" id="r{{ film.tmdbId }}_4" name="rating_{{ film.tmdbId }}" value="4">
-                        <label for="r{{ film.tmdbId }}_4">&#9733;</label>
-                        <input type="radio" id="r{{ film.tmdbId }}_3" name="rating_{{ film.tmdbId }}" value="3">
-                        <label for="r{{ film.tmdbId }}_3">&#9733;</label>
-                        <input type="radio" id="r{{ film.tmdbId }}_2" name="rating_{{ film.tmdbId }}" value="2">
-                        <label for="r{{ film.tmdbId }}_2">&#9733;</label>
-                        <input type="radio" id="r{{ film.tmdbId }}_1" name="rating_{{ film.tmdbId }}" value="1">
-                        <label for="r{{ film.tmdbId }}_1">&#9733;</label>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="star-rating">
+                            <input type="radio" id="r{{ film.tmdbId }}_5" name="rating_{{ film.tmdbId }}" value="5">
+                            <label for="r{{ film.tmdbId }}_5">&#9733;</label>
+                            <input type="radio" id="r{{ film.tmdbId }}_4" name="rating_{{ film.tmdbId }}" value="4">
+                            <label for="r{{ film.tmdbId }}_4">&#9733;</label>
+                            <input type="radio" id="r{{ film.tmdbId }}_3" name="rating_{{ film.tmdbId }}" value="3">
+                            <label for="r{{ film.tmdbId }}_3">&#9733;</label>
+                            <input type="radio" id="r{{ film.tmdbId }}_2" name="rating_{{ film.tmdbId }}" value="2">
+                            <label for="r{{ film.tmdbId }}_2">&#9733;</label>
+                            <input type="radio" id="r{{ film.tmdbId }}_1" name="rating_{{ film.tmdbId }}" value="1">
+                            <label for="r{{ film.tmdbId }}_1">&#9733;</label>
+                        </div>
+                        <button type="button" class="btn btn-link btn-sm text-muted p-0 text-decoration-none"
+                                style="font-size: .75rem;"
+                                onclick="batalPilihan({{ film.tmdbId }})">Batal</button>
                     </div>
                 </div>
             </div>
@@ -49,4 +54,14 @@
         </button>
     </div>
 </form>
+
+<script>
+// Batalkan pilihan bintang untuk satu film.
+// Radio button HTML tidak bisa di-klik ulang untuk melepas pilihan, jadi
+// pembatalan harus dilakukan lewat script seperti ini.
+function batalPilihan(filmId) {
+    document.querySelectorAll('input[name="rating_' + filmId + '"]')
+            .forEach(function (radio) { radio.checked = false; });
+}
+</script>
 {% endblock %}
