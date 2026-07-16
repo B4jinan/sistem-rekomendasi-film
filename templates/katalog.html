@@ -95,6 +95,9 @@
                 <td class="text-center">{{ f.year }}</td>
                 <td class="text-center">
                     <span class="badge bg-warning text-dark">&#9733; {{ f.vote_average }}</span>
+                    <div class="text-muted" style="font-size: .7rem;">
+                        {{ f.vote_count|angka }} suara
+                    </div>
                 </td>
             </tr>
             {% endfor %}

@@ -25,9 +25,14 @@
                     {% if film.runtime %} &middot; {{ film.runtime }} menit{% endif %}
                 </p>
             </div>
-            <span class="badge bg-warning text-dark fs-6">
-                &#9733; {{ film.vote_average }}
-            </span>
+            <div class="text-end">
+                <span class="badge bg-warning text-dark fs-6">
+                    &#9733; {{ film.vote_average }}
+                </span>
+                <div class="text-muted small mt-1">
+                    dari {{ film.vote_count|angka }} penilaian
+                </div>
+            </div>
         </div>
 
         {% if film.trailer_url %}
@@ -96,9 +101,14 @@
                             </p>
                         </div>
                     </div>
-                    <span class="badge bg-warning text-dark">
-                        &#9733; {{ s.vote_average }}
-                    </span>
+                    <div class="text-end">
+                        <span class="badge bg-warning text-dark">
+                            &#9733; {{ s.vote_average }}
+                        </span>
+                        <div class="text-muted" style="font-size: .68rem;">
+                            {{ s.vote_count|angka }} suara
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

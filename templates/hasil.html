@@ -36,9 +36,14 @@
                             </small>
                         </p>
                     </div>
-                    <span class="badge bg-warning text-dark">
-                        &#9733; {{ rec.vote_average }}
-                    </span>
+                    <div class="text-end">
+                        <span class="badge bg-warning text-dark">
+                            &#9733; {{ rec.vote_average }}
+                        </span>
+                        <div class="text-muted" style="font-size: .68rem;">
+                            {{ rec.vote_count|angka }} suara
+                        </div>
+                    </div>
                 </div>
                 <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
                     <span class="badge bg-primary score-badge">

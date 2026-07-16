@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sistem-rekomendasi-film
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # 1 worker & 2 thread: mesin rekomendasi dimuat ke memori tiap worker,
+    # jadi menambah worker berarti melipatgandakan pemakaian RAM.
+    # Timeout 120 detik karena pemuatan artifact saat start butuh waktu.
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true      # Render membuat nilai acak & merahasiakannya
+      - key: PYTHON_VERSION
+        value: "3.12"

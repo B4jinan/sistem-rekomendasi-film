@@ -216,6 +216,7 @@ class RecommenderEngine:
                 "year": info.get("year"),
                 "genres": info.get("genres"),
                 "vote_average": info.get("vote_average"),
+                "vote_count": info.get("vote_count"),
                 "poster_url": self.get_poster_url(int(fid), POSTER_KECIL),
             })
         return hasil
@@ -240,6 +241,7 @@ class RecommenderEngine:
                 "genres_display": (str(g).replace("|", ", ")
                                    if isinstance(g, str) and g else "-"),
                 "vote_average": row.get("vote_average"),
+                "vote_count": row.get("vote_count"),
                 "poster_url": self.get_poster_url(fid, ukuran_poster),
             })
         return cards

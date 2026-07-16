@@ -39,6 +39,7 @@ def film_detail(tmdb_id):
         "year": year_disp,
         "genres": genres_disp,
         "vote_average": info.get("vote_average"),
+        "vote_count": info.get("vote_count"),
         "runtime": runtime_disp,
         "overview": overview if overview else "Sinopsis tidak tersedia.",
         "poster_url": engine.get_poster_url(tmdb_id, POSTER_BESAR),
