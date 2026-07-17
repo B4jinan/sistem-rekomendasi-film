@@ -66,7 +66,12 @@ class RecommenderEngine:
         self.fid_to_idx = joblib.load(path_fid_to_idx)
         self.feature_cols = joblib.load(path_feature_cols)
 
-        self.xgb_model = xgb.XGBClassifier()
+        # Dimuat sebagai Booster (bukan XGBClassifier). Alasannya: pembungkus
+        # sklearn milik XGBoost bentrok dengan scikit-learn versi baru
+        # (memakai _get_tags yang sudah dihapus), sehingga load_model gagal.
+        # API Booster tidak bergantung pada scikit-learn dan stabil lintas versi
+        # XGBoost — model yang sama bisa dimuat di 2.x maupun 3.x.
+        self.xgb_model = xgb.Booster()
         self.xgb_model.load_model(path_xgb_model)
 
         film = pd.read_csv(path_film)
@@ -502,7 +507,12 @@ class RecommenderEngine:
 
         X = features_df[self.feature_cols].fillna(0)
         features_df = features_df.copy()
-        features_df["xgb_score"] = self.xgb_model.predict_proba(X)[:, 1]
+        # Nilai dikirim sebagai array (bukan DataFrame) supaya tidak ada
+        # pencocokan nama kolom — urutan fitur sudah dijamin feature_cols.pkl.
+        # Booster.predict pada model binary:logistic langsung mengembalikan
+        # peluang kelas positif, sama seperti predict_proba(...)[:, 1].
+        dmatrix = xgb.DMatrix(X.values.astype(float))
+        features_df["xgb_score"] = self.xgb_model.predict(dmatrix)
 
         result = features_df.sort_values("xgb_score", ascending=False).head(top_n)
         cols = ["tmdbId", "title", "xgb_score", "cf_score", "cbf_score",
