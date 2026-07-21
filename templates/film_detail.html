@@ -27,11 +27,18 @@
             </div>
             <div class="text-end">
                 <span class="badge bg-warning text-dark fs-6">
-                    &#9733; {{ film.vote_average }}
+                    &#9733; {{ film.rating_gabungan }}
                 </span>
                 <div class="text-muted small mt-1">
-                    dari {{ film.vote_count|angka }} penilaian
+                    dari {{ film.total_penilai|angka }} penilaian
                 </div>
+                {% if film.jumlah_user_app > 0 %}
+                <div class="text-muted mt-1" style="font-size: .72rem; max-width: 220px;">
+                    Gabungan {{ film.vote_average }} dari {{ film.vote_count|angka }}
+                    penilaian TMDB, disesuaikan oleh
+                    {{ film.jumlah_user_app }} pengguna aplikasi.
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -103,10 +110,10 @@
                     </div>
                     <div class="text-end">
                         <span class="badge bg-warning text-dark">
-                            &#9733; {{ s.vote_average }}
+                            &#9733; {{ s.rating_gabungan }}
                         </span>
                         <div class="text-muted" style="font-size: .68rem;">
-                            {{ s.vote_count|angka }} suara
+                            {{ s.total_penilai|angka }} suara
                         </div>
                     </div>
                 </div>

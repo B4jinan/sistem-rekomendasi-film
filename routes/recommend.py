@@ -2,7 +2,8 @@
 import json
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, session, flash)
-from db import get_db, load_user_ratings
+from db import get_db, load_user_ratings, get_all_film_user_ratings
+from ratings_util import enrich_films
 from extensions import engine
 
 recommend_bp = Blueprint("recommend", __name__)
@@ -69,6 +70,8 @@ def hasil():
     for rec in recommendations:
         rec["genres_display"] = rec["genres"].replace("|", ", ") if rec["genres"] else "-"
         rec["xgb_score_pct"] = round(rec["xgb_score"] * 100, 1)
+
+    enrich_films(recommendations, get_all_film_user_ratings())
 
     return render_template("hasil.html",
                           recommendations=recommendations,

@@ -2,11 +2,13 @@
 import json
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, session, flash)
-from db import get_db, load_user_ratings
+from db import get_db, load_user_ratings, get_all_film_user_ratings
+from ratings_util import hitung_rating_gabungan, enrich_films
 from engine import POSTER_BESAR
 from extensions import engine
 
 katalog_bp = Blueprint("katalog", __name__)
+
 
 
 @katalog_bp.route("/film/<int:tmdb_id>")
@@ -46,6 +48,20 @@ def film_detail(tmdb_id):
         "trailer_url": engine.get_trailer_url(tmdb_id),
     }
 
+    # Rating gabungan (TMDB + pengguna aplikasi) — hanya untuk tampilan.
+    # vote_average asli TIDAK diubah; tetap dipakai apa adanya oleh engine.
+    ratings_map = get_all_film_user_ratings()
+    rating_gabungan, jumlah_user_app = hitung_rating_gabungan(
+        info.get("vote_average"), info.get("vote_count"),
+        ratings_map.get(tmdb_id, []))
+    try:
+        vc_int = int(info.get("vote_count"))
+    except (TypeError, ValueError):
+        vc_int = 0
+    film["rating_gabungan"] = rating_gabungan
+    film["jumlah_user_app"] = jumlah_user_app
+    film["total_penilai"] = vc_int + jumlah_user_app
+
     similar = engine.get_similar_films(tmdb_id, n=6)
     for s in similar:
         g = s.get("genres")
@@ -54,6 +70,9 @@ def film_detail(tmdb_id):
             s["year"] = int(s.get("year"))
         except (TypeError, ValueError):
             s["year"] = "-"
+
+    # Film mirip juga memakai rating gabungan (peta yang sama, tanpa query lagi)
+    enrich_films(similar, ratings_map)
 
     conn = get_db()
     row = conn.execute(
@@ -93,6 +112,7 @@ def katalog():
 
     result = engine.browse_films(genre=genre, query=query, year_decade=year,
                                  sort=sort, arah=arah, page=page, per_page=50)
+    enrich_films(result["films"], get_all_film_user_ratings())
     return render_template("katalog.html",
                           result=result,
                           genres=engine.all_genres,
